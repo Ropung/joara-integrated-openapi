@@ -2,6 +2,10 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.0'
 	id 'io.spring.dependency-management' version '1.1.0'
+
+	// API Docs
+	id 'org.asciidoctor.jvm.convert' version '3.3.2' // [1] Rest Docs - .adoc + .json(not open api)
+	id 'com.epages.restdocs-api-spec' version '0.17.1' // [2] convert them to .json(open api)
 }
 
 group = 'com.example'
@@ -13,10 +17,45 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// JSON Libs
+	implementation 'com.google.code.gson:gson:2.10.1'
+
+	// RestDoc to Open API
+	implementation "org.springdoc:springdoc-openapi-ui:1.6.14"
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.17.1'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy 'openapi3'
+}
+
+// rest docs open api
+openapi3 { // Manually: ./gradlew :openapi3
+	println("project.rootProject.rootDir: $project.rootProject.rootDir")
+	println("project.name: ${project.name}")
+
+	server = 'https://localhost:8080'
+	title = 'My Sample Spring API'
+	description = 'This is an example of API'
+	tagDescriptionsPropertiesFile = "${project.rootProject.projectDir}/docs/tag-descriptions.yml"
+	version = '0.1.0'
+	format = 'json'
+	outputDirectory = 'src/main/resources/static/docs'
+	outputFileNamePrefix = "openapi3.${project.name}"
+
+	project.mkdir "${project.projectDir}/${outputDirectory}"
 }
